@@ -1075,6 +1075,38 @@ def query_service_lenovo():
             "message": f"请求异常: {str(e)}"
         })
 
+@app.route('/reg', methods=['POST'])
+def handle_captcha():
+    """API接口：验证码识别"""
+    try:
+        # 获取请求体中的base64编码图片
+        img_base64 = request.get_data(as_text=True)
+        logger.info(f"收到验证码识别请求，图片大小: {len(img_base64)} 字节")
+        
+        # 解码base64字符串为图片字节
+        import base64
+        img_bytes = base64.b64decode(img_base64)
+        logger.info(f"解码后图片大小: {len(img_bytes)} 字节")
+        
+        # 尝试使用ddddocr识别验证码
+        try:
+            import ddddocr
+            ocr = ddddocr.DdddOcr()
+            result = ocr.classification(img_bytes)
+            # 取前四位
+            captcha_text = result[0:4]
+            logger.info(f"验证码识别成功: {captcha_text}")
+            return captcha_text
+        except ImportError:
+            logger.warning("ddddocr库未安装，无法进行验证码识别")
+            return "ddddocr not available", 500
+        except Exception as ocr_error:
+            logger.error(f"验证码识别失败: {str(ocr_error)}")
+            return "OCR error", 500
+    except Exception as e:
+        logger.error(f"验证码处理异常: {str(e)}")
+        return "Error", 500
+
 if __name__ == "__main__":
     logger.info("===== 启动服务查询API ======")
     
