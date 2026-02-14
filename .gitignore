@@ -1,0 +1,36 @@
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 会话文件
+session.pkl
+
+# 缓存文件
+__pycache__/
+*.pyc
+
+# 日志文件
+*.log
+
+# 验证码图片
+captcha_debug.jpg
+huawei_captcha.jpg
+
+# 调试文件
+service_query_debug.html
+
+# 虚拟环境
+venv/
+env/
+
+# IDE相关
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 其他敏感文件
+*.pem
+*.key
+*.secret
