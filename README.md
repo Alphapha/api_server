@@ -95,6 +95,27 @@ curl "http://localhost:9876/sn_query/huawei?sn=设备序列号"
 curl -X POST -H "Content-Type: application/json" -d '{"sn": "设备序列号"}' "http://localhost:9876/sn_query/huawei"
 ```
 
+#### 4.4.3 验证码识别接口
+
+**POST请求**：
+```bash
+curl -X POST http://localhost:9876/reg -d "base64编码的图片数据"
+```
+
+**参数说明**：
+- 请求体：base64编码的图片数据（纯文本格式）
+- 响应：识别出的验证码文本（前四位）
+
+**返回示例**：
+```
+ABCD
+```
+
+**错误返回**：
+- `ddddocr not available`：ddddocr库未安装
+- `OCR error`：验证码识别失败
+- `Error`：其他处理错误
+
 ## 5. 示例代码
 
 ### 5.1 Python示例
@@ -175,6 +196,7 @@ print(response.json())
 
 - **2026-02-14**：初始化项目，实现深信服和华为设备查询功能
 - **2026-02-14**：添加文档和配置文件，完善项目结构
+- **2026-02-14**：添加验证码识别接口 `/reg`，支持base64编码图片的验证码识别
 
 ## 8. 注意事项
 
