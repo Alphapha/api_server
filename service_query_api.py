@@ -103,6 +103,41 @@ class SangforBBSLogin:
             logger.error(f"验证session时发生错误: {str(e)}")
             return False
     
+    def is_session_valid_for_query(self):
+        """验证当前session是否可以用于查询"""
+        if not self.session:
+            logger.warning("session不存在")
+            return False
+        
+        try:
+            # 尝试访问服务查询页面验证session
+            test_url = "https://bbs.sangfor.com.cn/plugin.php?id=service:query"
+            response = self.session.get(test_url, headers=self.headers, timeout=10)
+            response.encoding = "utf-8"
+            
+            # 检查是否包含登录成功的特征
+            success_indicators = ["服务查询", "设备序列号", "查询"]
+            for indicator in success_indicators:
+                if indicator in response.text:
+                    logger.info("session可用于查询")
+                    return True
+            
+            # 检查是否需要登录
+            if "您必须先登录后才能进行相关操作" in response.text:
+                logger.warning("session已过期，无法用于查询")
+                return False
+            
+            # 检查是否被重定向到登录页面
+            if "member.php?mod=logging&action=login" in response.url:
+                logger.warning("session已过期，被重定向到登录页面")
+                return False
+            
+            logger.warning("session状态不确定")
+            return False
+        except Exception as e:
+            logger.error(f"验证查询session时发生错误: {str(e)}")
+            return False
+    
     def retry_request(func):
         """网络请求重试装饰器"""
         @wraps(func)
@@ -332,6 +367,12 @@ class SangforBBSLogin:
         """使用当前session查询服务信息"""
         if not self.session:
             logger.error("会话未初始化，无法查询服务信息")
+            return None
+        
+        # 在查询前验证session是否仍然有效
+        logger.info("验证session是否可用于查询")
+        if not self.is_session_valid_for_query():
+            logger.warning("session已失效，无法进行查询")
             return None
         
         try:
@@ -615,6 +656,29 @@ def query_service_sangfor():
                                     "success": 0,
                                     "message": "服务查询失败: 验证码错误"
                                 })
+                        # 检查是否是session失效
+                        elif "您必须先登录后才能进行相关操作" in service_result or (result.get("message") and "您必须先登录" in result.get("message", "")):
+                            logger.warning("服务查询失败: session已失效，准备重新登录")
+                            # 强制重新登录
+                            if login_client.force_login():
+                                logger.info("重新登录成功，准备重试查询")
+                                retry_count += 1
+                                if retry_count < max_retries:
+                                    wait_time = retry_count
+                                    logger.info(f"{wait_time}秒后重试...")
+                                    time.sleep(wait_time)
+                                else:
+                                    logger.error("已达到最大重试次数，服务查询失败")
+                                    return jsonify({
+                                        "success": 0,
+                                        "message": "服务查询失败: session失效且重试次数过多"
+                                    })
+                            else:
+                                logger.error("重新登录失败")
+                                return jsonify({
+                                    "success": 0,
+                                    "message": "服务查询失败: 重新登录失败"
+                                })
                         else:
                             # 解析服务查询成功的响应结果
                             if "data" in result and isinstance(result["data"], list):
@@ -661,17 +725,40 @@ def query_service_sangfor():
                             })
                 else:
                     logger.warning("服务查询失败，准备重试")
-                    retry_count += 1
-                    if retry_count < max_retries:
-                        wait_time = retry_count
-                        logger.info(f"{wait_time}秒后重试...")
-                        time.sleep(wait_time)
+                    # 检查是否是session失效导致的失败
+                    if not login_client.is_session_valid_for_query():
+                        logger.warning("检测到session已失效，准备重新登录")
+                        if login_client.force_login():
+                            logger.info("重新登录成功，准备重试查询")
+                            retry_count += 1
+                            if retry_count < max_retries:
+                                wait_time = retry_count
+                                logger.info(f"{wait_time}秒后重试...")
+                                time.sleep(wait_time)
+                            else:
+                                logger.error("已达到最大重试次数，服务查询失败")
+                                return jsonify({
+                                    "success": 0,
+                                    "message": "服务查询失败: session失效且重试次数过多"
+                                })
+                        else:
+                            logger.error("重新登录失败")
+                            return jsonify({
+                                "success": 0,
+                                "message": "服务查询失败: 重新登录失败"
+                            })
                     else:
-                        logger.error("已达到最大重试次数，服务查询失败")
-                        return jsonify({
-                            "success": 0,
-                            "message": "服务查询失败"
-                        })
+                        retry_count += 1
+                        if retry_count < max_retries:
+                            wait_time = retry_count
+                            logger.info(f"{wait_time}秒后重试...")
+                            time.sleep(wait_time)
+                        else:
+                            logger.error("已达到最大重试次数，服务查询失败")
+                            return jsonify({
+                                "success": 0,
+                                "message": "服务查询失败"
+                            })
             except Exception as e:
                 logger.error(f"服务查询异常: {str(e)}")
                 retry_count += 1
