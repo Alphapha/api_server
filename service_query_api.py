@@ -464,7 +464,7 @@ class SangforBBSLogin:
                             api_url,
                             headers=api_headers,
                             data=img_base64,
-                            timeout=10
+                            timeout=15
                         )
                         
                         # 记录API响应详情
@@ -491,13 +491,28 @@ class SangforBBSLogin:
                                     logger.info("验证码长度正确，使用该验证码")
                                     break
                                 else:
-                                    logger.warning(f"验证码长度不正确: {captcha_text}")
+                                    logger.warning(f"验证码长度不正确: {captcha_text}，重新获取验证码图片")
+                                    # 验证码长度不正确，重新获取验证码图片
                                     retry_count += 1
                                     if retry_count < max_retries:
-                                        logger.info(f"{retry_count}秒后重试...")
-                                        time.sleep(retry_count)  # 递增等待时间
+                                        # 重新获取验证码图片
+                                        logger.info("重新获取验证码图片...")
+                                        update_random = random.randint(10000, 99999)
+                                        captcha_img_url = f"https://bbs.sangfor.com.cn/misc.php?mod=seccode&update={update_random}&idhash={idhash}"
+                                        img_response = self.session.get(captcha_img_url, headers=captcha_headers, timeout=10)
+                                        if img_response.status_code == 200:
+                                            # 更新保存的验证码图片
+                                            with open('captcha_debug.jpg', 'wb') as f:
+                                                f.write(img_response.content)
+                                            logger.info(f"已重新保存验证码图片，大小: {len(img_response.content)} 字节")
+                                            # 继续下一次尝试
+                                            continue
+                                        else:
+                                            logger.error(f"重新获取验证码图片失败，状态码: {img_response.status_code}")
+                                            retry_count += 1
                                     else:
                                         logger.warning("已达到最大重试次数，使用默认验证码")
+                                        break
                             except Exception as decode_e:
                                 logger.error(f"解码验证码响应失败: {str(decode_e)}")
                                 retry_count += 1
@@ -514,6 +529,22 @@ class SangforBBSLogin:
                                 time.sleep(retry_count)
                             else:
                                 logger.warning("已达到最大重试次数，使用默认验证码")
+                    except requests.Timeout as timeout_e:
+                        logger.error(f"API识别超时: {str(timeout_e)}")
+                        retry_count += 1
+                        if retry_count < max_retries:
+                            logger.info(f"{retry_count}秒后重试...")
+                            time.sleep(retry_count)
+                        else:
+                            logger.warning("已达到最大重试次数，使用默认验证码")
+                    except requests.RequestException as req_e:
+                        logger.error(f"API请求异常: {str(req_e)}")
+                        retry_count += 1
+                        if retry_count < max_retries:
+                            logger.info(f"{retry_count}秒后重试...")
+                            time.sleep(retry_count)
+                        else:
+                            logger.warning("已达到最大重试次数，使用默认验证码")
                     except Exception as api_e:
                         logger.error(f"API识别失败: {str(api_e)}")
                         retry_count += 1
