@@ -1,36 +1,29 @@
-# 环境变量文件
+# 环境变量文件（包含敏感信息）
 .env
-.env.local
-.env.*.local
 
-# 会话文件
-session.pkl
-
-# 缓存文件
+# Python 缓存
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
 
 # 日志文件
-*.log
+logs/
 
-# 验证码图片
-captcha_debug.jpg
-huawei_captcha.jpg
+# 数据文件（SQLite 数据库等）
+data/
 
-# 调试文件
-service_query_debug.html
+# 临时文件
+/tmp/*.log
+/tmp/*.jpg
+/tmp/*.pkl
 
-# 虚拟环境
-venv/
-env/
-
-# IDE相关
+# IDE 配置
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# 其他敏感文件
-*.pem
-*.key
-*.secret
+# 系统文件
+.DS_Store
+Thumbs.db

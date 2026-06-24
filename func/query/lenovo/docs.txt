@@ -1,0 +1,62 @@
+入口：https://datacentersupport.lenovo.com/cn/zc
+
+
+
+第一个重要请求：POST /cn/zc/api/v4/mse/v2/getproducts HTTP/2
+Host: datacentersupport.lenovo.com
+Cookie: Lenovo_SessionID=05d8c2cb-5acf-405a-b21b-1eb4a70c8f73; eSupport.CL=cnzc; AMCVS_F6171253512D2B8C0A490D45%40AdobeOrg=1; s_ecid=MCMID%7C43576722482501851640706496922284153555; s_cc=true; aamtest1=auto%3D549200; aam_uuid=43359520695253239220691321820494540685; esv4_ipdetectEnableTip=2; QuantumMetricUserID=9b56458225499004eeb5764df37b58a3; ContactUsSN=j901elmc; CSN=j901elmc; CPS=SERVERS/THINKSYSTEM/SR650V2/7Z73/7Z73CTO1WW/J901ELMC; s_ips=962; QuantumMetricSessionID=f02cc89816dcc6fcc2d6f792eef937de; AMCV_F6171253512D2B8C0A490D45%40AdobeOrg=-1124106680%7CMCIDTS%7C20610%7CMCMID%7C43576722482501851640706496922284153555%7CMCAAMLH-1781321902%7C3%7CMCAAMB-1781321902%7CRKhpRz8krg2tLO6pguXWp5olkAcUniQYPHaMWWgdJ3xzPWQmdj0y%7CMCCIDH%7C0%7CMCOPTOUT-1780724302s%7CNONE%7CMCAID%7CNONE%7CvVersion%7C5.2.0; ak_bmsc=DC48D68A75A520B0A219CD905824FE5A~000000000000000000000000000000~YAAQhGDBF+QiHXKeAQAAneICmwCQrAc661LPY2WFCZaTIn66TMtL+6Vr4xg8WXkUFKu/hXvol8ylG8v7z6cL8yocpubpvi5D9LHgN3b51NEQssSXYk7OIffHzyrBw5Zb8P/OkzVdfT0HXCkA98dFL4wLM19c4DyTk7hB/98Q5NjmZ9Ix/p34Lz99y4AiWBwIEsFpjmuvpPE9Ka9mxm60pNw2BHEaOrbfuIMal8igjjHbzJw2dDNRDhzabx+mxCQo3ks+fq6SvQiT9UaCndgxgUgqn4CmF2P5gbKx9ECMJ39Q/Uqtz9pmRYLpOBTTEX95zLRKNk6mXMW2XzArEoT5dYSDiTpumQ4EeZva1iunpPnDxK6VwhXjHBCUlXqr8LVRMEDsRDVhPPy5K0jsX8jDxUtDj/GrrPqw; phpRepairStatus=false; bm_sz=D119EA0D80208C9496D8DC1C134FBD0D~YAAQP2HBF6R0cXaeAQAA2ToYmwCy2LcSTk1aNz4gBvotYZJWF49gr+a1ZMbX/rKzSlou4bp5jHVpnvXHdBC9SVWXbj7LRj4CiLLfY4w3XOxb6Q/EeM+TeFQ2Rl+RaeexA+fuJIGp90peqH6XrHE37Hvt/c2PVvmrBw5bLaXwmyQ4wZFbLWUJAOnMXAhL/EnFuDUiNhamUR81qwLmsTpudCDQKWduhD+uwGvnOi2cFmcHtjGButk3OtX961JuwCNa50zPQbi/1gwSVIuo7JvfbMIsOVp38LgLSlNwxY1x74EsINwHcCfM2dX+nXx91jTiKh30ew5xXzgDmY5vK14+bBp8ntdcdWQrM7bmDU/smHKOg0g0SUePybxQAdasNpk5GZxu455RqthR8FsAVaGAp7uBaMptKv6beiPccAEPMpbxU8yNiCe2Tsg=~3290672~3422529; _abck=B230BDD0B869DDA03813777921A69621~0~YAAQP2HBF6p0cXaeAQAAEkIYmxCL5RydkUYPUA1froq7dfieDj7KTWtOrFXuqyTji69TpSwgicGfJd8F068ls/wNzx+VxPZPRFhl2eElGxmq5iH45mrJ2wK7xGOS58jJWzOeMDMu62SvKNJmPBTFNXToUZ+NhVleDaE74vM2qkResIbcSwRDEovikqeIWdsyryz5Jv1Brj4LA3gzQBwcQy1j+tq6uKHtToPbWUGelmdzjbMHsiB8zVzmaf1IwzbBrMVEusVGkU3tP7grtCBbjMbF/iEvFSTQ9pLM5+K6FNH5XRy2bniIEPxS84HHCNEnapzHP9MsuROaTwWyRvc7fnfzliT4ZS6Hl+sAuJ9twOd+L9fT/nlvUlQA9AZoKBQ0D+0ftTa9x9cJ6YM+SsM5FqiXaDURHxu3ReFCtyjD3lSDOxyCx9oMB4nLna49ZsFASMHWICTioEGWVy8Kz0UuBOLt7KoT/sLc4J1hAhat4RRvi2vPuMB3Nc1mRXNU8bdU4T6hq/o2y9uHeoAwpToV8JVcIy4N662kQD3QZd/A2gBfWw7jxI1X1ct1imUPt/e9kqbqhVZXWpujZIDLl9Gb/mZIM9L5RwfHqYXH0INT0Sb+HfP7xmzrb4TnxSCCp5Z5GuRT6bT4+0KogNJVFSdtgT+cJV1ylEsxhBGDTTzgB+SlJVa1mZuL8/Nt2aR5Xx272WzrGvRziO2m8du7vsgwZYoRs5thWNcdUoe69XoM7tM3fFjJ5gB4M6d4xAHEHXpCrUrHq4anKisVigTs+q+HnaMd~-1~-1~-1~AAQAAAAF%2f%2f%2f%2f%2f8uLfFUfQs155GMDiJW%2fjYXgEnpt65dR+9XL93o712F39q+2qUtXsZdJQB6v4Z4qRL%2f5yN2pDlvEr2W5M4apB8BgiCoCDEK8LzPwwEqplYvyEJwxNL1TfO1yqaH4Bl9uejO+RYTbqHYfFkvfRNJ6bpI9aijVwQfo1rNw8RDtqQ%3d%3d~-1; s_gpv=cn_zc%3Asupport%3Ahome; s_tp=2103; s_ppv=cn_zc%253Asupport%253Ahome%2C46%2C46%2C962%2C1%2C2; s_pltc=5.11; s_sq=%5B%5BB%5D%5D; s_plt=6.24; s_pltp=cn_zc%3Asupport%3Ahome; bm_sv=B73D730F65E9E5F5D3D8AF9D2929EEA7~YAAQP2HBF9Z0cXaeAQAAQFQYmwBIvXTYmq3gEFrORihrf3S2hPPyso+FbN5PVQ52C2pfdpgExODsgu0koUCe7pD6rgts2LS+RY5U8MBUSNOVgbp3izxb95snbUD2rU+7Su1mOGHfF0QLdePz6lHyK8GhyOTC1zkIlqQ704qdW/2uh3AOl+kS6stSo5zIs353ykUBcDzhB/QRdAMHwlpjJmbAlvG0raG5LKkSqgUQtsjVAN8f7iBo6zUIw/hxohsQfQ==~1; RT="z=1&dm=datacentersupport.lenovo.com&si=6f3093e2-eb35-47cc-a3ef-95b81a23d917&ss=mq1szdsm&sl=c&tt=18dn&bcn=%2F%2F684d0d46.akstat.io%2F&ld=xfqt"
+Content-Length: 24
+Sec-Ch-Ua-Platform: "Windows"
+X-Csrf-Token: 1i2YlCuXz30wbYtWsWEq/k, 1i2YlCuXz30wbYtWsWEq/k
+X-Requested-Timezone: Asia/Shanghai
+Sec-Ch-Ua: "Not/A)Brand";v="8", "Chromium";v="125", "Google Chrome";v="125"
+Sec-Ch-Ua-Mobile: ?0
+X-Requested-With: XMLHttpRequest
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.6285.209 Safari/537.36
+Accept: application/json, text/plain, */*
+Content-Type: application/json
+Origin: https://datacentersupport.lenovo.com
+Sec-Fetch-Site: same-origin
+Sec-Fetch-Mode: cors
+Sec-Fetch-Dest: empty
+Referer: https://datacentersupport.lenovo.com/cn/zc
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,zh-TW;q=0.7
+Priority: u=1, i
+
+{"productId":"J901ELMC"}
+
+第1个请求的响应：
+HTTP/2 200 OK
+Content-Type: application/json; charset=utf-8
+Etag: W/"243-VnQPN0wxPI1ZdpbPXXuvApMeWio"
+Access-Control-Expose-Headers: Server-Timing
+Server-Timing: traceparent;desc="00-8b48e3ae93aae0e7c78371be169d9a85-374bdb6b6b4ddd2d-01"
+X-Envoy-Upstream-Service-Time: 1575
+X-Mesh-Version: 2026
+Content-Length: 579
+Date: Sat, 06 Jun 2026 04:04:19 GMT
+Set-Cookie: LSESSION=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.lenovo.com; httponly
+Set-Cookie: LID=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.lenovo.com; samesite=none; secure; httponly
+Server-Timing: edge; dur=8
+Server-Timing: origin; dur=1819
+Server-Timing: cdn-cache; desc=MISS
+Content-Security-Policy: default-src wss: https: data: 'unsafe-inline' 'unsafe-eval' blob:; script-src http://localhost:* https: data: 'unsafe-inline' 'unsafe-eval' blob:; connect-src http://localhost:* https: wss: blob:; worker-src 'self' blob:; frame-ancestors *.lenovo.com http://localhost:* https://teams.microsoft.com
+Strict-Transport-Security: max-age=31536000 ; includeSubDomains ; preload
+X-Xss-Protection: 1; mode=block
+Set-Cookie: bm_sv=B73D730F65E9E5F5D3D8AF9D2929EEA7~YAAQP2HBF6p6cXaeAQAAg2camwBbhrDxoSigNegp6lgvcnFCC7xiYUL3+cY5PxZDEqbH51LT3SJcLAoiqYVa4Sg2x7qU7UjSNFDECrycHBHN2c9oHxP5poKyFFOAhNaa9uDnu7vupX2a8d/OC/+am5K/Nuc8jpZDIRSnw4JLvf6CDhWWlX62GSlwd61v41qEKfSeaIoFFyXWwCe6k2UXfEbW7e8b16UhxzMuFgmWATVSqgHKCrOuC11zvu+X5JbjkA==~1; Domain=.lenovo.com; Path=/; Expires=Sat, 06 Jun 2026 05:38:31 GMT; Max-Age=5652; Secure
+Server-Timing: ak_p; desc="1780718657620_398549311_337608723_182725_11852_217_0_15";dur=1
+
+[{"Id":"SERVERS/THINKSYSTEM/SR650V2/7Z73/7Z73CTO1WW/J901ELMC","Guid":"","Brand":"EBG","Name":"SR650 V2 (ThinkSystem) - Type 7Z73","Serial":"J901ELMC","Type":"Product.Serial","ParentID":["A9F44F6E-238A-ADD5-70BC-110A2F9AA1B3","CA5764DC-2DBE-42B8-A13F-9FC46AB33ECD","857EF8BD-3EAF-4F59-B750-B03B41CC1B1D","D8FC0B87-A453-46DE-9937-6B1C8B2587E6","339E8F3F-BAD4-4F7D-BDAA-5E6C1DD8827E"],"Image":"http://download.lenovo.com/images/prodimageservers/servers.jpg","Popularity":"","IsChina":3,"IsSupported":true,"IsSolutionParent":false,"ProductBrand":"","Manufacturer":"","MvsInfo":null}]
+
+第2个重要请求：
+
+https://datacentersupport.lenovo.com/cn/zc/products/servers/thinksystem/sr650v2/7z73/7z73cto1ww/j901elmc?linkTrack=Caps%3ABody_SearchProduct&searchType=6&keyWordSearch=J901ELMC
+
+
+第2个重要请求里的维保情况部分：
+ <script type="text/javascript">
+var ds_productinfo = window.ds_productinfo || {"BreadCrumbTitle":"SERVERS::THINKSYSTEM/SR650V2/7Z73/7Z73CTO1WW/J901ELMC","ProductName":"SR650 V2 (ThinkSystem) - Type 7Z73","MachineType":"7Z73","Model":"7Z73SR650 V2","Serial":"J901ELMC.7Z73","Imei":"","Brand":"EBG","ImageSrc":"http://download.lenovo.com/images/prodimageservers/servers.jpg","Url":"servers/thinksystem/sr650v2/7z73/7z73cto1ww/j901elmc","UrlCS":"SERVERS/THINKSYSTEM/SR650V2/7Z73/7Z73CTO1WW/J901ELMC","OSs":[],"UserId":"985747e5-c11e-4f1a-99fb-ea4aa160208a","GroupName":"服务器","SeriesName":"ThinkSystem","Description":"","Body":"","MyProducts":[],"DefaultOs":"Windows 10 (64-bit)","ContactPhone":"","WindowsAutopilot":false,"PmdmAttributes":{},"Created":{"seconds":0,"nanos":0},"IDs":["J901ELMC"],"Countries":["CN"],"AodInfos":[],"UpsellEOSDate":null,"IsAodInfoFixed":false};
+var ds_warranties = window.ds_warranties || {"IsSolution":false,"ProductId":"SERVERS/THINKSYSTEM/SR650V2/7Z73/7Z73CTO1WW/J901ELMC","ProductName":"SR650 V2 (ThinkSystem) - Type 7Z73","ProductImage":"http://download.lenovo.com/images/prodimageservers/servers.jpg","BaseProductId":"J901ELMC","FullProductId":"SERVERS/THINKSYSTEM/SR650V2/7Z73/7Z73CTO1WW/J901ELMC","MachineType":"7Z73","Mode":"SR650 V2","Serial":"J901ELMC","Imei":null,"MTM":"SR650 V2","ManufactureDate":"","Status":true,"X86Contract":{"ContracsListRestructure":[]},"WarrantyUpgradeURLInfo":{"WarrantyURL":"http://lesc.lenovo.com/ss/#/services","Method":null,"SerialNumberField":null,"AdditionalFields":null,"UserCountry":null,"IsShowURL":false},"IsShowUpGrade":false,"IsPremier":false,"SpecialSupport":"Others","ContractWarranties":[],"IsShowContractWarranty":false,"IsShowWarning":true,"BaseUpmaWarranties":[],"BaseWarranties":[],"UpmaWarranties":[],"AodWarranties":[{"Start":"2024-02-23","End":"2027-04-22","Status":1,"WarrentyType":"16062000000059","Description":"中端服务器WTY升级 3Y 7X24（Hardbundle）","CountryName":"","Channel":"","Origin":"-","POPDate":"-","Category":"UNKNOWN","StatusV2":"Active","DeliveryType":"unknown","Duration":0,"Name":"中端服务器3年7*24*4小时现场服务","IsPremier":false,"Type":"UNKNOWN","SortWeight":0,"PremierService":"","EndDate":"2027-04-22"},{"Start":"2024-02-23","End":"2029-04-22","Status":1,"WarrentyType":"16090800000055","Description":"中端服务器第三年升级到第五年5x9NBD服务","CountryName":"","Channel":"","Origin":"-","POPDate":"-","Category":"UNKNOWN","StatusV2":"Active","DeliveryType":"unknown","Duration":0,"Name":"中端服务器第三年升级到第五年5x9NBD服务","IsPremier":false,"Type":"UNKNOWN","SortWeight":0,"PremierService":"","EndDate":"2029-04-22"},{"Start":"2024-02-23","End":"2029-04-22","Status":1,"WarrentyType":"16090800000060","Description":"中端服务器第三年升级到第五年7x24现场服务","CountryName":"","Channel":"","Origin":"-","POPDate":"-","Category":"UNKNOWN","StatusV2":"Active","DeliveryType":"unknown","Duration":0,"Name":"中端服务器第三年升级到第五年7*24*4现场服务","IsPremier":false,"Type":"UNKNOWN","SortWeight":0,"PremierService":"","EndDate":"2029-04-22"},{"Start":"2024-02-23","End":"2027-04-22","Status":1,"WarrentyType":"16090800000071","Description":"中端服务器保修期内硬盘不返还三年","CountryName":"","Channel":"","Origin":"-","POPDate":"-","Category":"UNKNOWN","StatusV2":"Active","DeliveryType":"unknown","Duration":0,"Name":"中端服务器保修期内硬盘不返还三年","IsPremier":false,"Type":"UNKNOWN","SortWeight":0,"PremierService":"","EndDate":"2027-04-22"},{"Start":"2024-02-23","End":"2027-04-22","Status":1,"WarrentyType":"17071900000024","Description":"3Y Warranty 5*9 NBD","CountryName":"","Channel":"","Origin":"-","POPDate":"-","Category":"UNKNOWN","StatusV2":"Active","DeliveryType":"unknown","Duration":0,"Name":"3Y Warranty 5*9 NBD","IsPremier":false,"Type":"UNKNOWN","SortWeight":0,"PremierService":"","EndDate":"2027-04-22"},{"Start":"2024-02-23","End":"2025-04-22","Status":-1,"WarrentyType":"17031700000012","Description":"Server base installation","CountryName":"","Channel":"","Origin":"-","POPDate":"-","Category":"UNKNOWN","StatusV2":"Expired","DeliveryType":"unknown","Duration":0,"Name":"Server base installation","IsPremier":false,"Type":"UNKNOWN","SortWeight":0,"PremierService":"","EndDate":"2025-04-22"},{"Start":"2024-02-23","End":"2025-04-22","Status":-1,"WarrentyType":"19092600000003","Description":"Xcare 系统软件支持服务1年7*24 HB","CountryName":"","Channel":"","Origin":"-","POPDate":"-","Category":"UNKNOWN","StatusV2":"Expired","DeliveryType":"unknown","Duration":0,"Name":"Xcare系统软件支持服务","IsPremier":false,"Type":"UNKNOWN","SortWeight":0,"PremierService":"","EndDate":"2025-04-22"}],"InstantWarranties":[],"SaeWarranties":[],"ShipToCountry":"China","Shiped":"","Country":"China","RemainingDays":1051,"EntireWarrantyPeriod":{"Start":1708646400000,"End":1871510400000},"MtmPurchased":"","Source":"IPS","IsWarrantyRegistering":false,"CO2Offset":null,"OtherServices":[],"ConfigurationServices":[],"Software":[]};
+var ds_serviceid = window.ds_serviceid || {};
+</script>
