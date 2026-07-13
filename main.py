@@ -37,6 +37,8 @@ app.config['JSON_AS_ASCII'] = False  # 支持中文
 from func.query.sangfor.api_routes import register_routes as register_sangfor_routes
 from func.query.huawei.api_routes import register_routes as register_huawei_routes
 from func.query.lenovo.api_routes import register_routes as register_lenovo_routes
+from func.device_management.ota.api_routes import register_routes as register_ota_routes
+from func.device_management.spiffs.api_routes import register_routes as register_spiffs_routes
 from func.database import init_db
 
 # 初始化数据库
@@ -46,6 +48,8 @@ init_db()
 register_sangfor_routes(app)
 register_huawei_routes(app)
 register_lenovo_routes(app)
+register_ota_routes(app)
+register_spiffs_routes(app)
 
 
 @app.route('/health', methods=['GET'])
@@ -83,7 +87,8 @@ def get_vendors():
 
 # 初始化日志
 logger.info("API Server 初始化完成")
-logger.info(f"已注册路由: /api/query/sangfor, /api/query/huawei, /api/query/lenovo")
+logger.info(f"已注册查询路由: /api/query/sangfor, /api/query/huawei, /api/query/lenovo")
+logger.info(f"已注册设备管理路由: /api/ota/*, /api/spiffs/*")
 
 
 if __name__ == '__main__':

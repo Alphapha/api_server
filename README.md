@@ -14,7 +14,11 @@ api_server/
 ├── .gitignore                  # Git 忽略文件配置
 ├── README.md                   # 本文档
 ├── data/                       # 数据目录（自动生成，存放数据库等文件）
-│   └── device_warranty.db      # SQLite 数据库文件
+│   ├── device_warranty.db      # SQLite 数据库文件
+│   ├── ota_status/             # OTA 更新状态存储
+│   └── backups/                # SPIFFS 备份文件存储
+│       └── {device_id}/        # 每个设备独立目录
+│           └── metadata.json   # 备份元数据
 ├── logs/                       # 日志目录（自动生成）
 │   ├── app.log                 # 应用日志（业务逻辑、数据库、查询请求）
 │   ├── access.log              # 访问日志（HTTP 请求记录）
@@ -31,17 +35,26 @@ api_server/
     │   │   └── captcha_handler.py
     │   └── lenovo/           # 联想验证码
     │       └── captcha_handler.py
-    └── query/                 # 查询模块
-        ├── sangfor/          # 深信服查询
+    ├── query/                 # 查询模块
+    │   ├── sangfor/          # 深信服查询
+    │   │   ├── api_routes.py      # API 路由
+    │   │   ├── login_handler.py   # 登录处理
+    │   │   └── query_handler.py   # 查询处理
+    │   ├── huawei/           # 华为查询
+    │   │   ├── api_routes.py      # API 路由
+    │   │   └── query_handler.py   # 查询处理
+    │   └── lenovo/           # 联想查询
+    │       ├── api_routes.py      # API 路由
+    │       └── query_handler.py   # 查询处理
+    └── device_management/   # 设备管理模块（新增）
+        ├── ota/              # OTA 固件更新
+        │   ├── __init__.py
         │   ├── api_routes.py      # API 路由
-        │   ├── login_handler.py   # 登录处理
-        │   └── query_handler.py   # 查询处理
-        ├── huawei/           # 华为查询
-        │   ├── api_routes.py      # API 路由
-        │   └── query_handler.py   # 查询处理
-        └── lenovo/           # 联想查询
+        │   └── ota_handler.py     # OTA 状态管理
+        └── spiffs/           # SPIFFS 备份恢复
+            ├── __init__.py
             ├── api_routes.py      # API 路由
-            └── query_handler.py   # 查询处理
+            └── spiffs_handler.py  # 备份文件管理
 ```
 
 ## 快速开始
@@ -308,6 +321,355 @@ curl "http://localhost:9876/sn_query/lenovo?sn=J901ELMC&cache=0"
 - `vendor`: 厂商标识（`sangfor`, `huawei`, `lenovo`）
 - `data`: 查询结果数组
   - 每个设备包含基础字段和 `warranty_data`（完整原始 JSON 数据）
+
+---
+
+## 16. OTA 热更新接口
+
+**功能说明**：通过 WiFi 远程刷固件，避免每次用 USB 刷固件的麻烦，且不丢失正在运行的任务。
+
+**工作原理**：设备连接 WiFi 后，通过调用 OTA 接口触发固件更新，仅更新 app 分区，SPIFFS（会话/cron/记忆）和 NVS（凭据）完全保留。启用了回滚保护：如果新固件启动失败，设备自动回滚到上一个版本。
+
+### 16.1 验证固件 URL
+
+```bash
+# 验证固件 URL 是否合法（预检）
+curl -X POST "http://localhost:9876/api/ota/validate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firmware_url": "https://github.com/user/repo/releases/download/v1.0/mimiclaw.bin"
+  }'
+```
+
+**响应示例：**
+```json
+{
+  "success": 1,
+  "message": "固件 URL 验证通过",
+  "data": {
+    "firmware_url": "https://github.com/user/repo/releases/download/v1.0/mimiclaw.bin",
+    "valid": true
+  }
+}
+```
+
+### 16.2 创建 OTA 更新任务
+
+```bash
+# 触发 OTA 更新（创建任务）
+curl -X POST "http://localhost:9876/api/ota/update" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "esp32-abc123",
+    "firmware_url": "https://github.com/user/repo/releases/download/v1.0/mimiclaw.bin"
+  }'
+```
+
+**请求参数：**
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `device_id` | string | 是 | 设备唯一标识 |
+| `firmware_url` | string | 是 | 固件下载 URL，**必须以 https:// 开头** |
+
+**响应示例：**
+```json
+{
+  "success": 1,
+  "message": "OTA 更新任务创建成功",
+  "data": {
+    "task_id": "550e8400-e29b-41d4-a716-446655440000",
+    "device_id": "esp32-abc123",
+    "firmware_url": "https://github.com/user/repo/releases/download/v1.0/mimiclaw.bin",
+    "status": "pending",
+    "progress": 0,
+    "created_at": "2026-07-14T10:00:00.000000",
+    "rollback_protection": true
+  }
+}
+```
+
+### 16.3 查询 OTA 状态和进度
+
+```bash
+# 查询设备的 OTA 更新状态
+curl "http://localhost:9876/api/ota/status?device_id=esp32-abc123"
+```
+
+**响应示例：**
+```json
+{
+  "success": 1,
+  "message": "获取状态成功",
+  "data": {
+    "task_id": "550e8400-e29b-41d4-a716-446655440000",
+    "device_id": "esp32-abc123",
+    "firmware_url": "https://.../mimiclaw.bin",
+    "status": "downloading",
+    "progress": 45,
+    "downloaded_bytes": 450000,
+    "total_bytes": 1000000,
+    "current_partition": "ota_0",
+    "target_partition": "ota_1",
+    "created_at": "2026-07-14T10:00:00.000000",
+    "updated_at": "2026-07-14T10:00:30.000000",
+    "rollback_protection": true
+  }
+}
+```
+
+**状态值说明：**
+
+| 状态 | 说明 |
+|------|------|
+| `pending` | 等待开始 |
+| `downloading` | 下载固件中 |
+| `verifying` | 校验固件中 |
+| `installing` | 安装固件中 |
+| `success` | 更新成功 |
+| `failed` | 更新失败 |
+| `rollback` | 已回滚到旧版本 |
+
+### 16.4 设备上报更新进度
+
+```bash
+# 设备在更新过程中上报进度
+curl -X POST "http://localhost:9876/api/ota/progress" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "esp32-abc123",
+    "status": "downloading",
+    "progress": 45,
+    "downloaded_bytes": 450000,
+    "total_bytes": 1000000,
+    "current_partition": "ota_0",
+    "target_partition": "ota_1"
+  }'
+```
+
+### 16.5 确认更新成功（取消回滚保护）
+
+新固件正常运行后，调用此接口确认成功。
+
+```bash
+curl -X POST "http://localhost:9876/api/ota/confirm" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "esp32-abc123"
+  }'
+```
+
+### 16.6 标记固件回滚
+
+如果新固件启动失败，设备自动回滚后调用此接口上报。
+
+```bash
+curl -X POST "http://localhost:9876/api/ota/rollback" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "esp32-abc123",
+    "reason": "新固件启动失败，看门狗重启"
+  }'
+```
+
+### 16.7 查看所有 OTA 任务
+
+```bash
+curl "http://localhost:9876/api/ota/tasks"
+```
+
+---
+
+## 17. SPIFFS 数据备份与恢复接口
+
+**功能说明**：备份和恢复设备上的 SPIFFS 分区数据（包含定时任务、会话历史、记忆等），防止数据丢失。
+
+### 17.1 创建备份（直接上传完整文件）
+
+适用于较小的备份文件（<10MB）：
+
+```bash
+# 直接上传完整备份文件
+curl -X POST "http://localhost:9876/api/spiffs/backup" \
+  -F "device_id=esp32-abc123" \
+  -F "description=2026年7月14日日常备份" \
+  -F "file=@/path/to/spiffs_backup.bin"
+```
+
+**响应示例：**
+```json
+{
+  "success": 1,
+  "message": "备份上传成功",
+  "data": {
+    "backup_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "device_id": "esp32-abc123",
+    "status": "completed",
+    "file_size": 524288,
+    "calculated_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "hash_valid": true,
+    "created_at": "2026-07-14T10:00:00.000000"
+  }
+}
+```
+
+### 17.2 分块上传备份（推荐用于大文件）
+
+**第一步：创建备份任务**
+
+```bash
+curl -X POST "http://localhost:9876/api/spiffs/backup" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "esp32-abc123",
+    "file_size": 1048576,
+    "file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "description": "大文件分块备份示例"
+  }'
+```
+
+**第二步：逐个上传分块**
+
+```bash
+# 上传第 0 块（共 10 块，每块建议 1MB）
+curl -X POST "http://localhost:9876/api/spiffs/backup/chunk" \
+  -F "device_id=esp32-abc123" \
+  -F "backup_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
+  -F "chunk_index=0" \
+  -F "total_chunks=10" \
+  -F "chunk=@chunk_000000.bin"
+
+# 上传第 1 块...
+curl -X POST "http://localhost:9876/api/spiffs/backup/chunk" \
+  -F "device_id=esp32-abc123" \
+  -F "backup_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890" \
+  -F "chunk_index=1" \
+  -F "total_chunks=10" \
+  -F "chunk=@chunk_000001.bin"
+# ... 继续上传直到所有分块完成
+```
+
+**第三步：完成备份，合并分块**
+
+```bash
+curl -X POST "http://localhost:9876/api/spiffs/backup/complete" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "esp32-abc123",
+    "backup_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  }'
+```
+
+### 17.3 查看设备的所有备份
+
+```bash
+curl "http://localhost:9876/api/spiffs/backups?device_id=esp32-abc123"
+```
+
+**响应示例：**
+```json
+{
+  "success": 1,
+  "message": "设备 esp32-abc123 共有 3 个备份",
+  "data": {
+    "device_id": "esp32-abc123",
+    "total": 3,
+    "backups": [
+      {
+        "backup_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "status": "completed",
+        "file_size": 1048576,
+        "description": "2026年7月14日日常备份",
+        "created_at": "2026-07-14T10:00:00.000000"
+      }
+      // ... 更多备份
+    ]
+  }
+}
+```
+
+### 17.4 获取备份详情
+
+```bash
+curl "http://localhost:9876/api/spiffs/backup/info?device_id=esp32-abc123&backup_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+```
+
+### 17.5 获取恢复信息（下载前检查）
+
+```bash
+# 不指定 backup_id 时自动使用最新备份
+curl "http://localhost:9876/api/spiffs/restore/info?device_id=esp32-abc123"
+```
+
+**响应示例：**
+```json
+{
+  "success": 1,
+  "message": "获取备份信息成功，设备可通过 /api/spiffs/restore 下载文件",
+  "data": {
+    "backup_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "device_id": "esp32-abc123",
+    "file_size": 1048576,
+    "file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "created_at": "2026-07-14T10:00:00.000000",
+    "restore_url": "/api/spiffs/restore?device_id=esp32-abc123&backup_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "chunk_size": 1048576
+  }
+}
+```
+
+### 17.6 下载备份文件（执行恢复）
+
+```bash
+# 下载指定备份文件恢复
+curl -O "http://localhost:9876/api/spiffs/restore?device_id=esp32-abc123&backup_id=a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+# 或下载最新备份
+curl -O "http://localhost:9876/api/spiffs/restore?device_id=esp32-abc123"
+```
+
+### 17.7 删除备份
+
+```bash
+curl -X DELETE "http://localhost:9876/api/spiffs/backup" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "esp32-abc123",
+    "backup_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  }'
+```
+
+---
+
+## 设备管理接口使用总结
+
+### OTA 热更新使用流程
+
+```
+1. 编译固件：idf.py build
+2. 上传 build/mimiclaw.bin 到 HTTPS 可访问的 URL（推荐 GitHub Releases）
+3. 通过 /api/ota/update 触发更新
+   ├─ CLI：mimi> ota_update "https://github.com/user/repo/releases/download/v1.0/mimiclaw.bin"
+   └─ 对飞书/Telegram 机器人说："从 https://xxx.com/mimiclaw.bin 更新你的固件"
+4. 设备通过 /api/ota/progress 上报进度
+5. 新固件启动成功后，调用 /api/ota/confirm 确认
+6. 如启动失败，设备自动回滚并调用 /api/ota/rollback 上报
+7. 随时用 /api/ota/status 查看进度和当前分区
+```
+
+### SPIFFS 数据备份与恢复使用流程
+
+```
+备份：
+1. 调用 /api/spiffs/backup 上传备份文件（小文件直接上传，大文件分块）
+   ├─ CLI：mimi> spiffs_backup "http://你的服务器IP:9876/api/spiffs/backup"
+   └─ 对机器人说："把数据备份到 http://192.168.1.100:9876/api/spiffs/backup"
+
+恢复：
+1. 调用 /api/spiffs/restore 下载备份文件
+   ├─ CLI：mimi> spiffs_restore "http://你的服务器IP:9876/api/spiffs/restore"
+   └─ 对机器人说："从 http://192.168.1.100:9876/api/spiffs/restore 恢复数据"
+```
 
 ## 配置说明
 
@@ -676,6 +1038,80 @@ ls -lh /tmp/*.jpg /tmp/*.pkl
 rm /tmp/session.pkl /tmp/*.jpg
 ```
 
+#### 4. OTA 固件更新失败
+
+**问题症状**：固件下载成功但无法启动，或一直提示回滚。
+
+**排查步骤**：
+
+```bash
+# 1. 检查 OTA 任务状态
+curl "http://localhost:9876/api/ota/status?device_id=你的设备ID"
+
+# 2. 确认固件 URL 可以正常下载
+curl -I "https://你的固件地址/mimiclaw.bin"
+# 确保返回 200 OK，且 Content-Type 为 application/octet-stream 或 binary
+
+# 3. 检查固件大小是否与编译输出一致
+ls -lh build/mimiclaw.bin
+
+# 4. 查看 OTA 状态日志
+grep -i "ota" logs/app.log
+```
+
+**常见原因与解决方法**：
+- **固件 URL 不是 HTTPS**：OTA 安全策略要求必须使用 https:// 开头的 URL
+- **固件编译错误**：确认编译时选择了正确的分区表（包含 ota_0、ota_1 分区）
+- **首次使用 OTA**：首次使用前必须通过 USB 刷入一次包含 OTA 功能的固件
+- **Flash 空间不足**：检查设备 Flash 大小是否足够容纳两个 app 分区
+
+#### 5. SPIFFS 备份上传失败
+
+**问题症状**：备份文件上传中断或提示错误。
+
+**排查步骤**：
+
+```bash
+# 1. 检查备份目录是否有写入权限
+ls -ld data/backups/
+touch data/backups/test_write && rm data/backups/test_write
+
+# 2. 检查磁盘空间
+df -h data/backups/
+
+# 3. 查看备份元数据
+cat data/backups/metadata.json | python3 -m json.tool
+
+# 4. 查看备份日志
+grep -i "spiffs\|backup" logs/app.log
+```
+
+**常见原因与解决方法**：
+- **分块上传顺序混乱**：确保按 chunk_index 从 0 到 total_chunks-1 依次上传
+- **分块丢失**：调用 /api/spiffs/backup/complete 前检查是否所有分块都已上传成功
+- **磁盘空间不足**：定期清理旧的备份文件，释放存储空间
+- **哈希校验不通过**：上传时提供的 file_hash 与实际计算值不一致，建议重新生成备份
+
+#### 6. SPIFFS 恢复后数据丢失
+
+**排查步骤**：
+
+```bash
+# 1. 确认恢复的备份文件是否完整
+ls -lh data/backups/{设备ID}/{备份ID}.bin
+
+# 2. 验证备份文件哈希值
+sha256sum data/backups/{设备ID}/{备份ID}.bin
+# 与 /api/spiffs/restore/info 返回的 file_hash 对比
+
+# 3. 列出设备可用的备份列表
+curl "http://localhost:9876/api/spiffs/backups?device_id=你的设备ID"
+```
+
+**常见原因**：
+- 备份文件本身不完整，恢复前建议通过 /api/spiffs/restore/info 确认备份状态为 completed
+- 设备恢复后未正确重启，建议恢复完成后手动重启设备确认
+
 ### 清除缓存
 
 ```bash
@@ -709,6 +1145,28 @@ rm logs/*.log.*
 7. **数据持久化**所有查询数据自动保存到数据库，支持版本管理
 8. **数据目录**数据库文件存放在 `data/` 目录，路径可在 `.env` 中配置
 9. **配置灵活**通过修改 `.env` 的 `DB_PATH` 可轻松切换数据库位置
+
+### OTA 热更新注意事项
+
+10. **固件 URL 安全**：OTA 只接受 `https://` 开头的固件 URL，确保传输过程加密，防止中间人攻击
+11. **分区保留**：OTA 只更新 app 分区，**SPIFFS（会话/cron/记忆）和 NVS（凭据）完全保留**，不用担心数据丢失
+12. **回滚保护**：启用了自动回滚机制，如果新固件启动失败，设备会自动回滚到上一个稳定版本
+13. **首次使用**：首次使用 OTA 前，必须通过 USB 刷入一次包含 OTA 功能的固件，后续才能无线升级
+14. **进度查询**：随时用 `/api/ota/status` 接口或 `ota_status` 命令查看更新进度和当前运行分区
+15. **版本确认**：新固件正常运行一段时间后，务必调用 `/api/ota/confirm` 接口确认，取消回滚保护
+16. **固件大小**：确保固件大小不超过目标分区大小，建议编译前检查分区表配置
+17. **网络稳定**：OTA 下载过程中请保持 WiFi 连接稳定，中断后可重新发起更新任务
+
+### SPIFFS 备份恢复注意事项
+
+18. **备份频率**：建议每周或重大操作前（如 OTA 升级前）进行一次数据备份
+19. **存储位置**：所有备份文件存放在 `data/backups/{device_id}/` 目录，每个设备独立存储
+20. **分块大小**：大文件建议分块上传，推荐分块大小为 1MB（1048576 字节）
+21. **完整性校验**：建议上传时提供 `file_hash`（SHA256），服务端会自动校验文件完整性
+22. **存储空间**：定期清理旧的备份文件，避免占满服务器磁盘空间
+23. **恢复操作**：恢复 SPIFFS 备份后，建议重启设备确保所有数据正确加载
+24. **版本匹配**：恢复备份时注意备份数据版本与当前固件版本的兼容性，避免跨大版本恢复
+25. **权限检查**：确保服务器 `data/backups` 目录有正确的读写权限，否则备份会失败
 
 ## License
 
