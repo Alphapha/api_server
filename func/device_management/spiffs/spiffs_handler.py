@@ -437,6 +437,8 @@ class SPIFFSBackupManager:
         Returns:
             备份列表
         """
+        # 从磁盘重新加载元数据，确保数据一致性
+        self._metadata = self._load_metadata()
         backups = self._metadata["backups"].get(device_id, [])
 
         # 按时间倒序排列
@@ -598,6 +600,7 @@ class SPIFFSBackupManager:
     def _find_backup(self, device_id: str, backup_id: str) -> Optional[Dict[str, Any]]:
         """
         查找指定的备份信息
+        先从内存缓存查找，未找到则从磁盘重新加载元数据后再查找
 
         Args:
             device_id: 设备 ID
@@ -610,11 +613,21 @@ class SPIFFSBackupManager:
         for backup in backups:
             if backup.get("backup_id") == backup_id:
                 return backup
+
+        # 内存中未找到，从磁盘重新加载元数据后再查找
+        logger.info(f"内存中未找到备份，从磁盘重新加载元数据: device={device_id}")
+        self._metadata = self._load_metadata()
+        backups = self._metadata["backups"].get(device_id, [])
+        for backup in backups:
+            if backup.get("backup_id") == backup_id:
+                return backup
+
         return None
 
     def _get_latest_completed_backup(self, device_id: str) -> Optional[Dict[str, Any]]:
         """
         获取设备最新的已完成备份
+        先从内存缓存查找，未找到则从磁盘重新加载元数据后再查找
 
         Args:
             device_id: 设备 ID
@@ -622,6 +635,20 @@ class SPIFFSBackupManager:
         Returns:
             最新备份信息，没有则返回 None
         """
+        backups = self._metadata["backups"].get(device_id, [])
+        completed = [
+            b for b in backups
+            if b.get("status") == BackupStatus.COMPLETED
+        ]
+        if completed:
+            return max(
+                completed,
+                key=lambda x: x.get("timestamp", 0)
+            )
+
+        # 内存中未找到已完成备份，从磁盘重新加载元数据后再查找
+        logger.info(f"内存中未找到已完成备份，从磁盘重新加载元数据: device={device_id}")
+        self._metadata = self._load_metadata()
         backups = self._metadata["backups"].get(device_id, [])
         completed = [
             b for b in backups
